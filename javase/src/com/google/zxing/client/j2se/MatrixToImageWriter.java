@@ -33,51 +33,75 @@ import java.awt.image.BufferedImage;
  */
 public final class MatrixToImageWriter {
 
-  private static final int BLACK = 0xFF000000;
-  private static final int WHITE = 0xFFFFFFFF;
+    private static final int BLACK = 0xFF000000;
+    private static final int WHITE = 0xFFFFFFFF;
 
-  private MatrixToImageWriter() {}
-
-  /**
-   * Renders a {@link BitMatrix} as an image, where "false" bits are rendered
-   * as white, and "true" bits are rendered as black.
-   */
-  public static BufferedImage toBufferedImage(BitMatrix matrix) {
-    int width = matrix.getWidth();
-    int height = matrix.getHeight();
-    BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-    for (int x = 0; x < width; x++) {
-      for (int y = 0; y < height; y++) {
-        image.setRGB(x, y, matrix.get(x, y) ? BLACK : WHITE);
-      }
+    private MatrixToImageWriter() {
     }
-    return image;
-  }
 
-  /**
-   * Writes a {@link BitMatrix} to a file.
-   *
-   * @see #toBufferedImage(BitMatrix)
-   */
-  public static void writeToFile(BitMatrix matrix, String format, File file)
-          throws IOException {
-    BufferedImage image = toBufferedImage(matrix);
-    if (!ImageIO.write(image, format, file)) {
-      throw new IOException("Could not write an image of format " + format + " to " + file);
-    }
-  }
 
-  /**
-   * Writes a {@link BitMatrix} to a stream.
-   *
-   * @see #toBufferedImage(BitMatrix)
-   */
-  public static void writeToStream(BitMatrix matrix, String format, OutputStream stream)
-          throws IOException {
-    BufferedImage image = toBufferedImage(matrix);
-    if (!ImageIO.write(image, format, stream)) {
-      throw new IOException("Could not write an image of format " + format);
+    /**
+     * Renders a {@link BitMatrix} as an image, where "false" bits are rendered
+     * as white, and "true" bits are rendered as black.
+     *
+     */
+    public static BufferedImage toBufferedImage(BitMatrix matrix, String foregroundColor, String backgroundColor) {
+        int width = matrix.getWidth();
+        int height = matrix.getHeight();
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                image.setRGB(x, y, matrix.get(x, y) ? fgToHexString(foregroundColor) : bgToHexString(backgroundColor));
+            }
+        }
+        return image;
     }
-  }
+
+    private static int fgToHexString(String colorString) {
+        int fgHex = BLACK;
+        fgHex = colorStringToHex(colorString, fgHex);
+        return fgHex;
+    }
+
+    private static int bgToHexString(String colorString) {
+        int bgHex = WHITE;
+        bgHex = colorStringToHex(colorString, bgHex);
+        return bgHex;
+    }
+
+    private static int colorStringToHex(String colorString, int bgHex) {
+        if (!colorString.isEmpty()) {
+            if (colorString.length() == 6) {
+                bgHex = Long.valueOf("FF" + colorString, 16).intValue();
+            }
+        }
+        return bgHex;
+    }
+
+    /**
+     * Writes a {@link BitMatrix} to a file.
+     *
+     * @see #toBufferedImage(BitMatrix, String,String)
+     */
+    public static void writeToFile(BitMatrix matrix, String format, File file, String foregroundColor, String backgroundColor)
+            throws IOException {
+        BufferedImage image = toBufferedImage(matrix,foregroundColor,  backgroundColor);
+        if (!ImageIO.write(image, format, file)) {
+            throw new IOException("Could not write an image of format " + format + " to " + file);
+        }
+    }
+
+    /**
+     * Writes a {@link BitMatrix} to a stream.
+     *
+     * @see #toBufferedImage(BitMatrix,String,String)
+     */
+    public static void writeToStream(BitMatrix matrix, String format, OutputStream stream,String foregroundColor, String backgroundColor)
+            throws IOException {
+        BufferedImage image = toBufferedImage(matrix,foregroundColor,  backgroundColor);
+        if (!ImageIO.write(image, format, stream)) {
+            throw new IOException("Could not write an image of format " + format);
+        }
+    }
 
 }
